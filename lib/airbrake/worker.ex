@@ -57,7 +57,7 @@ defmodule Airbrake.Worker do
   def handle_cast({:report, exception, stacktrace, options}, %{last_exception: {exception, details}} = state) do
     enhanced_options = Enum.reduce([:context, :params, :session, :env], options, fn(key, enhanced_options) ->
       Keyword.put(enhanced_options, key, Map.merge(options[key] || %{}, details[key] || %{}))
-    end)    
+    end)
     send_report(exception, stacktrace, enhanced_options)
     {:noreply, Map.put(state, :last_exception, nil)}
   end
@@ -84,9 +84,13 @@ defmodule Airbrake.Worker do
   end
 
   defp send_report(exception, stacktrace, options) do
+    IO.puts "try to send report"
+    IO.puts "Ignore exception: #{inspect exception}"
     unless ignore?(exception) do
+      IO.puts "Dont ignore"
       payload = Airbrake.Payload.new(exception, stacktrace, options)
-      HTTPoison.post(@notify_url, Poison.encode!(payload), @request_headers)
+      r = HTTPoison.post(@notify_url, Poison.encode!(payload), @request_headers)
+      IO.puts(inspect r)
     end
   end
 
